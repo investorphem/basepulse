@@ -50,44 +50,28 @@ export default function SignalButton() {
         copyContracts.splice(idx, 1);
       }
 
-      // 2. Manually estimate gas with a 20% buffer to prevent revert
-      let gasLimit;
-      try {
-        const estimatedGas = await publicClient.estimateContractGas({
-          address: EXECUTOR_ADDRESS,
-          abi: EXECUTOR_ABI,
-          functionName: "executeAll",
-          args: [selected],
-          account,
-        });
-        gasLimit = (estimatedGas * 120n) / 100n;
-      } catch (estimateError) {
-        console.warn("Gas estimation failed, using fallback high limit:", estimateError);
-        gasLimit = 1000000n; // Hardcoded fallback if estimation fails
-      }
-
-      // 3. Simulate with the custom gas limit
-      const { request } = await publicClient.simulateContract({
-        address: EXECUTOR_ADDRESS,
-        abi: EXECUTOR_ABI,
-        functionName: "executeAll",
-        args: [selected],
-        account,
-        gas: gasLimit, 
-      });
-
+      // 2. Initialize Wallet Client
       const walletClient = createWalletClient({
         account,
         chain: base,
         transport: custom(sdk.wallet.ethProvider)
       });
 
-      // 4. Trigger wallet popup
-      const hash = await walletClient.writeContract(request);
+      // 3. Send Transaction directly using the CORRECT function name: executeRandom
+      // We use a manual gas limit of 1,000,000 to bypass estimation reverts
+      const hash = await walletClient.writeContract({
+        address: EXECUTOR_ADDRESS,
+        abi: EXECUTOR_ABI,
+        functionName: "executeRandom", // UPDATED: Changed from executeAll
+        args: [selected],
+        gas: 1000000n, 
+      });
+
       setStatusMessage({ text: `Success! Hash: ${hash.slice(0, 10)}...`, type: "success" });
     } catch (err: any) {
       console.error("Detailed Error:", err);
-      const msg = err.shortMessage || "Transaction Reverted. Check Base ETH balance.";
+      // Farcaster Sandboxed environment prevents alert(); use UI status message
+      const msg = err.shortMessage || "Transaction failed. Check if you've already signaled.";
       setStatusMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
@@ -101,13 +85,16 @@ export default function SignalButton() {
           Connect Farcaster Wallet
         </button>
       ) : (
-        <button onClick={handleClick} disabled={loading} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
-          {loading ? "Processing..." : "⚡ Signal"}
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+          <p style={{ fontSize: "0.8rem", color: "gray" }}>Account: {account.slice(0, 6)}...{account.slice(-4)}</p>
+          <button onClick={handleClick} disabled={loading} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
+            {loading ? "Processing..." : "⚡ Signal"}
+          </button>
+        </div>
       )}
 
       {statusMessage && (
-        <div style={{ marginTop: "15px", color: statusMessage.type === "error" ? "red" : "green", fontSize: "0.9rem" }}>
+        <div style={{ marginTop: "15px", color: statusMessage.type === "error" ? "#ff4d4d" : "#00ff00", fontSize: "0.9rem" }}>
           {statusMessage.text}
         </div>
       )}
