@@ -7,7 +7,6 @@ import { base } from "viem/chains";
 import { EXECUTOR_ADDRESS, EXECUTOR_ABI } from "../../lib/executor";
 import { CONTRACTS } from "../../lib/contracts";
 
-// 1. Initialize a Public Client for Base to handle simulations
 const publicClient = createPublicClient({
   chain: base,
   transport: http(),
@@ -16,30 +15,32 @@ const publicClient = createPublicClient({
 export default function SignalButton() {
   const [loading, setLoading] = useState(false);
   const [account, setAccount] = useState<`0x${string}` | null>(null);
+  // UI state for error and success messages instead of alert()
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
 
   const connectWallet = async () => {
     try {
       const provider = sdk.wallet.ethProvider;
       const accounts = await provider.request({ method: "eth_requestAccounts" }) as `0x${string}`[];
-      
       if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
+        setStatusMessage({ text: "Wallet Connected", type: "success" });
       }
     } catch (err) {
-      console.error("Wallet connection failed:", err);
-      alert("Failed to connect Farcaster wallet");
+      setStatusMessage({ text: "Connection failed", type: "error" });
     }
   };
 
   const handleClick = async () => {
     if (!account) {
-      alert("Connect your Farcaster wallet first!");
+      setStatusMessage({ text: "Connect wallet first!", type: "error" });
       return;
     }
 
     setLoading(true);
+    setStatusMessage(null); // Clear previous messages
+
     try {
-      // 2. Pick 5 random contracts
       const selected: string[] = [];
       const copyContracts = [...CONTRACTS];
       for (let i = 0; i < 5; i++) {
@@ -49,10 +50,7 @@ export default function SignalButton() {
         copyContracts.splice(idx, 1);
       }
 
-      console.log("Simulating with contracts:", selected);
-
-      // 3. SIMULATE CONTRACT (This catches the error before the wallet pops up)
-      // If this fails, it will jump straight to the catch block with the exact reason.
+      // Simulation - This will catch reverts without using alert()
       const { request } = await publicClient.simulateContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
@@ -61,7 +59,6 @@ export default function SignalButton() {
         account,
       });
 
-      // 4. Send transaction via the Farcaster native wallet provider
       const walletClient = createWalletClient({
         account,
         chain: base,
@@ -69,44 +66,32 @@ export default function SignalButton() {
       });
 
       const hash = await walletClient.writeContract(request);
-
-      console.log("Tx hash:", hash);
-      alert(`✅ Signal sent! Tx hash: ${hash}`);
+      setStatusMessage({ text: `Success! Hash: ${hash.slice(0, 10)}...`, type: "success" });
     } catch (err: any) {
-      console.error("Detailed Error:", err);
-
-      // Extract revert reason or short message for better UX
-      const errorMsg = err.shortMessage || err.reason || err.message || "Unknown error";
-      
-      // If you get "Insufficient funds", the wallet needs more ETH on Base
-      alert(`❌ Simulation failed: ${errorMsg}`);
+      // Catch revert reason (e.g. "execution reverted: cooldown active")
+      const msg = err.shortMessage || "Transaction Reverted. Check contract requirements.";
+      setStatusMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ marginTop: "1rem" }}>
+    <div style={{ marginTop: "1rem", textAlign: "center" }}>
       {!account ? (
-        <button
-          onClick={connectWallet}
-          className="connect-btn"
-          style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
-        >
+        <button onClick={connectWallet} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
           Connect Farcaster Wallet
         </button>
       ) : (
-        <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "0.8rem", color: "gray" }}>
-            Connected: {account.slice(0, 6)}...{account.slice(-4)}
-          </p>
-          <button
-            onClick={handleClick}
-            disabled={loading}
-            style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
-          >
-            {loading ? "Simulating..." : "⚡ Signal"}
-          </button>
+        <button onClick={handleClick} disabled={loading} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
+          {loading ? "Simulating..." : "⚡ Signal"}
+        </button>
+      )}
+
+      {/* NEW: UI-based status feedback since alert() is blocked */}
+      {statusMessage && (
+        <div style={{ marginTop: "15px", color: statusMessage.type === "error" ? "red" : "green", fontSize: "0.9rem" }}>
+          {statusMessage.text}
         </div>
       )}
     </div>
