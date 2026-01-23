@@ -39,14 +39,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           content={JSON.stringify({
             version: "1",
             id: process.env.FARCASTER_MINIAPP_ID || "0199409c-b991-9a61-b1d8-fef2086f7533",
-            imageUrl: "https://basepulse-six.vercel.app/preview.png",
+            imageUrl: "https://basepulse-six.vercel.app/imageurl.png",
             button: {
               title: "Open BasePulse",
               action: {
                 type: "launch_frame",
                 name: "BasePulse",
                 url: "https://basepulse-six.vercel.app/",
-                splashImageUrl: "https://basepulse-six.vercel.app/splash-200.png",
+                splashImageUrl: "https://basepulse-six.vercel.app/splashimageurl.png",
                 splashBackgroundColor: "#111827",
               },
             },
