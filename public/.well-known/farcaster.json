@@ -1,0 +1,16 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "frame": {
+    "version": "vNext",
+    "name": "Signal Button",
+    "iconUrl": "/icon.png",
+    "homeUrl": "https://your-domain.xyz",
+    "imageUrl": "/signal.png",
+    "buttonTitle": "Signal",
+    "webhookUrl": "https://your-domain.xyz/api/signal"
+  }
+}
