@@ -1,15 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { useFarcaster } from "@farcaster/miniapp-sdk";
-import { createWalletClient, custom } from "viem";
+import { createSolanaWalletProvider } from "@farcaster/miniapp-sdk";
+import { createWalletClient, http } from "viem";
 import { base } from "viem/chains";
 import { EXECUTOR_ADDRESS, EXECUTOR_ABI } from "../../lib/executor";
 import { CONTRACTS } from "../../lib/contracts";
 
 export default function SignalButton() {
   const [loading, setLoading] = useState(false);
-  const { account } = useFarcaster();
+  const [account, setAccount] = useState<string | null>(null);
+
+  // Initialize Farcaster wallet provider
+  const farcasterProvider = createSolanaWalletProvider();
+
+  const connectWallet = async () => {
+    try {
+      const walletAccount = await farcasterProvider.connect();
+      setAccount(walletAccount);
+    } catch (err) {
+      console.error("Wallet connection failed:", err);
+      alert("Failed to connect wallet");
+    }
+  };
 
   const handleClick = async () => {
     if (!account) {
@@ -19,15 +32,15 @@ export default function SignalButton() {
 
     setLoading(true);
     try {
-      // create client connected to Base chain
+      // Create viem client for Base chain
       const client = createWalletClient({
-        account: account,
+        account,
         chain: base,
-        transport: custom
+        transport: http()
       });
 
-      // pick 5 random contracts
-      const selected = [];
+      // Pick 5 random contracts
+      const selected: string[] = [];
       const copyContracts = [...CONTRACTS];
       for (let i = 0; i < 5; i++) {
         const idx = Math.floor(Math.random() * copyContracts.length);
@@ -35,7 +48,7 @@ export default function SignalButton() {
         copyContracts.splice(idx, 1);
       }
 
-      // send transaction to executor
+      // Send transaction
       const hash = await client.writeContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
@@ -54,12 +67,24 @@ export default function SignalButton() {
   };
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer", marginTop: "1rem" }}
-    >
-      {loading ? "Sending..." : "⚡ Signal"}
-    </button>
+    <div style={{ marginTop: "1rem" }}>
+      {!account && (
+        <button
+          onClick={connectWallet}
+          style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
+        >
+          Connect Farcaster Wallet
+        </button>
+      )}
+      {account && (
+        <button
+          onClick={handleClick}
+          disabled={loading}
+          style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
+        >
+          {loading ? "Sending..." : "⚡ Signal"}
+        </button>
+      )}
+    </div>
   );
 }
