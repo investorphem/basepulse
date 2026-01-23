@@ -15,7 +15,6 @@ const publicClient = createPublicClient({
 export default function SignalButton() {
   const [loading, setLoading] = useState(false);
   const [account, setAccount] = useState<`0x${string}` | null>(null);
-  // UI state for error and success messages instead of alert()
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
 
   const connectWallet = async () => {
@@ -38,9 +37,10 @@ export default function SignalButton() {
     }
 
     setLoading(true);
-    setStatusMessage(null); // Clear previous messages
+    setStatusMessage(null);
 
     try {
+      // 1. Pick 5 random contracts
       const selected: string[] = [];
       const copyContracts = [...CONTRACTS];
       for (let i = 0; i < 5; i++) {
@@ -50,13 +50,30 @@ export default function SignalButton() {
         copyContracts.splice(idx, 1);
       }
 
-      // Simulation - This will catch reverts without using alert()
+      // 2. Manually estimate gas with a 20% buffer to prevent revert
+      let gasLimit;
+      try {
+        const estimatedGas = await publicClient.estimateContractGas({
+          address: EXECUTOR_ADDRESS,
+          abi: EXECUTOR_ABI,
+          functionName: "executeAll",
+          args: [selected],
+          account,
+        });
+        gasLimit = (estimatedGas * 120n) / 100n;
+      } catch (estimateError) {
+        console.warn("Gas estimation failed, using fallback high limit:", estimateError);
+        gasLimit = 1000000n; // Hardcoded fallback if estimation fails
+      }
+
+      // 3. Simulate with the custom gas limit
       const { request } = await publicClient.simulateContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
         functionName: "executeAll",
         args: [selected],
         account,
+        gas: gasLimit, 
       });
 
       const walletClient = createWalletClient({
@@ -65,11 +82,12 @@ export default function SignalButton() {
         transport: custom(sdk.wallet.ethProvider)
       });
 
+      // 4. Trigger wallet popup
       const hash = await walletClient.writeContract(request);
       setStatusMessage({ text: `Success! Hash: ${hash.slice(0, 10)}...`, type: "success" });
     } catch (err: any) {
-      // Catch revert reason (e.g. "execution reverted: cooldown active")
-      const msg = err.shortMessage || "Transaction Reverted. Check contract requirements.";
+      console.error("Detailed Error:", err);
+      const msg = err.shortMessage || "Transaction Reverted. Check Base ETH balance.";
       setStatusMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
@@ -84,11 +102,10 @@ export default function SignalButton() {
         </button>
       ) : (
         <button onClick={handleClick} disabled={loading} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
-          {loading ? "Simulating..." : "⚡ Signal"}
+          {loading ? "Processing..." : "⚡ Signal"}
         </button>
       )}
 
-      {/* NEW: UI-based status feedback since alert() is blocked */}
       {statusMessage && (
         <div style={{ marginTop: "15px", color: statusMessage.type === "error" ? "red" : "green", fontSize: "0.9rem" }}>
           {statusMessage.text}
