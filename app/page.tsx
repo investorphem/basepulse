@@ -1,31 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { sdk } from "@farcaster/miniapp-sdk";
 import SignalButton from "./components/SignalButton";
-import { FarcasterProvider, useFarcaster } from "@farcaster/miniapp-sdk";
 
 export default function Page() {
-  return (
-    <FarcasterProvider>
-      <AppContent />
-    </FarcasterProvider>
-  );
-}
+  const [isSdkReady, setIsSdkReady] = useState(false);
+  const [context, setContext] = useState<any>(null);
 
-function AppContent() {
-  const { isConnected, connect } = useFarcaster();
+  useEffect(() => {
+    const load = async () => {
+      // 1. Initialize the SDK and signal that the app is ready to display
+      await sdk.actions.ready();
+      
+      // 2. Fetch the current Farcaster context (user data, etc.)
+      const ctx = await sdk.context;
+      setContext(ctx);
+      setIsSdkReady(true);
+    };
+
+    load();
+  }, []);
+
+  if (!isSdkReady) {
+    return <div>Loading BasePulse...</div>;
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem" }}>
       <h1>BasePulse Miniapp</h1>
-      <p>Connect your Farcaster wallet and tap to signal onchain interactions.</p>
+      <p>Logged in as: {context?.user?.displayName || "Farcaster User"}</p>
+      <p>Tap below to signal onchain interactions.</p>
 
-      {!isConnected ? (
-        <button onClick={connect} style={{ padding: "1rem 2rem", fontSize: "1rem" }}>
-          Connect Farcaster Wallet
-        </button>
-      ) : (
-        <SignalButton />
-      )}
+      {/* The SDK handles connection natively; SignalButton should manage its own wallet logic */}
+      <SignalButton />
     </div>
   );
 }
