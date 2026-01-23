@@ -40,29 +40,31 @@ export default function SignalButton() {
     setStatusMessage(null);
 
     try {
-      // 1. Pick 5 random contracts
-      const selected: string[] = [];
+      // 1. Pick 5 random contracts and ensure they are typed as addresses
+      const selected: `0x${string}`[] = []; 
       const copyContracts = [...CONTRACTS];
+      
       for (let i = 0; i < 5; i++) {
         if (copyContracts.length === 0) break;
         const idx = Math.floor(Math.random() * copyContracts.length);
-        selected.push(copyContracts[idx]);
+        // Cast string from lib/contracts to the required 0x${string} type
+        selected.push(copyContracts[idx] as `0x${string}`);
         copyContracts.splice(idx, 1);
       }
 
-      // 2. Initialize Wallet Client
+      // 2. Initialize Wallet Client using Farcaster's provider
       const walletClient = createWalletClient({
         account,
         chain: base,
         transport: custom(sdk.wallet.ethProvider)
       });
 
-      // 3. Send Transaction directly using the CORRECT function name: executeRandom
-      // We use a manual gas limit of 1,000,000 to bypass estimation reverts
+      // 3. Send Transaction
+      // Using 'executeRandom' from your ABI and a manual gas limit
       const hash = await walletClient.writeContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
-        functionName: "executeRandom", // UPDATED: Changed from executeAll
+        functionName: "executeRandom",
         args: [selected],
         gas: 1000000n, 
       });
@@ -70,8 +72,8 @@ export default function SignalButton() {
       setStatusMessage({ text: `Success! Hash: ${hash.slice(0, 10)}...`, type: "success" });
     } catch (err: any) {
       console.error("Detailed Error:", err);
-      // Farcaster Sandboxed environment prevents alert(); use UI status message
-      const msg = err.shortMessage || "Transaction failed. Check if you've already signaled.";
+      // Display error in UI since alert() is blocked in 2026 Farcaster sandboxes
+      const msg = err.shortMessage || "Transaction failed. Check Base ETH balance or cooldown.";
       setStatusMessage({ text: msg, type: "error" });
     } finally {
       setLoading(false);
@@ -81,20 +83,43 @@ export default function SignalButton() {
   return (
     <div style={{ marginTop: "1rem", textAlign: "center" }}>
       {!account ? (
-        <button onClick={connectWallet} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
+        <button 
+          onClick={connectWallet} 
+          style={{ padding: "1rem 2rem", borderRadius: "8px", cursor: "pointer" }}
+        >
           Connect Farcaster Wallet
         </button>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
-          <p style={{ fontSize: "0.8rem", color: "gray" }}>Account: {account.slice(0, 6)}...{account.slice(-4)}</p>
-          <button onClick={handleClick} disabled={loading} style={{ padding: "1rem 2rem", cursor: "pointer" }}>
+          <p style={{ fontSize: "0.8rem", color: "gray" }}>
+            Connected: {account.slice(0, 6)}...{account.slice(-4)}
+          </p>
+          <button 
+            onClick={handleClick} 
+            disabled={loading} 
+            style={{ 
+              padding: "1rem 2rem", 
+              borderRadius: "8px", 
+              cursor: loading ? "not-allowed" : "pointer",
+              backgroundColor: loading ? "#ccc" : "#0070f3",
+              color: "white",
+              border: "none"
+            }}
+          >
             {loading ? "Processing..." : "⚡ Signal"}
           </button>
         </div>
       )}
 
       {statusMessage && (
-        <div style={{ marginTop: "15px", color: statusMessage.type === "error" ? "#ff4d4d" : "#00ff00", fontSize: "0.9rem" }}>
+        <div style={{ 
+          marginTop: "15px", 
+          padding: "10px",
+          borderRadius: "5px",
+          backgroundColor: statusMessage.type === "error" ? "#fee2e2" : "#dcfce7",
+          color: statusMessage.type === "error" ? "#dc2626" : "#16a34a", 
+          fontSize: "0.9rem" 
+        }}>
           {statusMessage.text}
         </div>
       )}
