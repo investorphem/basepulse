@@ -1,16 +1,17 @@
 {
   "accountAssociation": {
-    "header": "",
-    "payload": "",
-    "signature": ""
+    "header": "eyJmaWQiOjIxOTA1OSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweEQ2OEYyMjZCQjY5ZTk4MmI3N0I0QTYxYUEwMmZhMzdhMjJCQUU2MDgifQ",
+    "payload": "eyJkb21haW4iOiJiYXNlcHVsc2Utc2l4LnZlcmNlbC5hcHAifQ",
+    "signature": "rfwvhyJt+QQ1rA/2g+/oHj/FEtb4fBtqIBXv1X+6rmdAJMKWBMn+sYkiK90g7B950CKDi4xc+Qu69QT9JMLRZRw="
   },
   "frame": {
-    "version": "vNext",
-    "name": "Signal Button",
-    "iconUrl": "/icon.png",
-    "homeUrl": "https://your-domain.xyz",
-    "imageUrl": "/signal.png",
-    "buttonTitle": "Signal",
-    "webhookUrl": "https://your-domain.xyz/api/signal"
+    "version": "1",
+    "name": "BasePulse",
+    "iconUrl": "https://basepulse-six.vercel.app",
+    "homeUrl": "https://basepulse-six.vercel.app",
+    "imageUrl": "https://basepulse-six.vercel.app",
+    "buttonTitle": "Launch BasePulse",
+    "splashImageUrl": "https://basepulse-six.vercel.app",
+    "splashBackgroundColor": "#0070f3"
   }
 }
