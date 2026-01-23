@@ -1,23 +1,31 @@
 "use client";
 
 import SignalButton from "./components/SignalButton";
+import { FarcasterProvider, useFarcaster } from "@farcaster/miniapp-sdk";
 
 export default function Page() {
   return (
-    <html>
-      <head>
-        <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:image" content="/signal.png" />
-        <meta property="fc:frame:button:1" content="⚡ Signal" />
-        <meta property="fc:frame:post_url" content="/api/signal" />
-      </head>
-      <body style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
-        <div>
-          <h1>BasePulse Miniapp</h1>
-          <p>Connect your wallet and tap to signal onchain interactions.</p>
-          <SignalButton />
-        </div>
-      </body>
-    </html>
+    <FarcasterProvider>
+      <AppContent />
+    </FarcasterProvider>
+  );
+}
+
+function AppContent() {
+  const { isConnected, connect } = useFarcaster();
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem" }}>
+      <h1>BasePulse Miniapp</h1>
+      <p>Connect your Farcaster wallet and tap to signal onchain interactions.</p>
+
+      {!isConnected ? (
+        <button onClick={connect} style={{ padding: "1rem 2rem", fontSize: "1rem" }}>
+          Connect Farcaster Wallet
+        </button>
+      ) : (
+        <SignalButton />
+      )}
+    </div>
   );
 }
