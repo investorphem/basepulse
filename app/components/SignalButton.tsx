@@ -1,26 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { createSolanaWalletProvider } from "@farcaster/miniapp-sdk";
-import { createWalletClient, http } from "viem";
+import { sdk } from "@farcaster/miniapp-sdk";
+import { createWalletClient, custom } from "viem";
 import { base } from "viem/chains";
 import { EXECUTOR_ADDRESS, EXECUTOR_ABI } from "../../lib/executor";
 import { CONTRACTS } from "../../lib/contracts";
 
 export default function SignalButton() {
   const [loading, setLoading] = useState(false);
-  const [account, setAccount] = useState<string | null>(null);
-
-  // Initialize Farcaster wallet provider
-  const farcasterProvider = createSolanaWalletProvider();
+  const [account, setAccount] = useState<`0x${string}` | null>(null);
 
   const connectWallet = async () => {
     try {
-      const walletAccount = await farcasterProvider.connect();
-      setAccount(walletAccount);
+      // Use the standard EIP-1193 provider from the Farcaster SDK
+      const provider = sdk.wallet.ethProvider;
+      const accounts = await provider.request({ method: "eth_requestAccounts" }) as `0x${string}`[];
+      
+      if (accounts && accounts.length > 0) {
+        setAccount(accounts[0]);
+      }
     } catch (err) {
       console.error("Wallet connection failed:", err);
-      alert("Failed to connect wallet");
+      alert("Failed to connect Farcaster wallet");
     }
   };
 
@@ -32,23 +34,24 @@ export default function SignalButton() {
 
     setLoading(true);
     try {
-      // Create viem client for Base chain
+      // Create viem client using the SDK's provider
       const client = createWalletClient({
         account,
         chain: base,
-        transport: http()
+        transport: custom(sdk.wallet.ethProvider)
       });
 
       // Pick 5 random contracts
       const selected: string[] = [];
       const copyContracts = [...CONTRACTS];
       for (let i = 0; i < 5; i++) {
+        if (copyContracts.length === 0) break;
         const idx = Math.floor(Math.random() * copyContracts.length);
         selected.push(copyContracts[idx]);
         copyContracts.splice(idx, 1);
       }
 
-      // Send transaction
+      // Send transaction via the Farcaster native wallet
       const hash = await client.writeContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
@@ -68,22 +71,24 @@ export default function SignalButton() {
 
   return (
     <div style={{ marginTop: "1rem" }}>
-      {!account && (
+      {!account ? (
         <button
           onClick={connectWallet}
           style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
         >
           Connect Farcaster Wallet
         </button>
-      )}
-      {account && (
-        <button
-          onClick={handleClick}
-          disabled={loading}
-          style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
-        >
-          {loading ? "Sending..." : "⚡ Signal"}
-        </button>
+      ) : (
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: "0.8rem", color: "gray" }}>Connected: {account.slice(0, 6)}...{account.slice(-4)}</p>
+          <button
+            onClick={handleClick}
+            disabled={loading}
+            style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
+          >
+            {loading ? "Sending..." : "⚡ Signal"}
+          </button>
+        </div>
       )}
     </div>
   );
