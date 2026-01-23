@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
-import { createWalletClient, custom } from "viem";
+import { createWalletClient, createPublicClient, custom, http } from "viem";
 import { base } from "viem/chains";
 import { EXECUTOR_ADDRESS, EXECUTOR_ABI } from "../../lib/executor";
 import { CONTRACTS } from "../../lib/contracts";
+
+// 1. Initialize a Public Client for Base to handle simulations
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http(),
+});
 
 export default function SignalButton() {
   const [loading, setLoading] = useState(false);
@@ -13,7 +19,6 @@ export default function SignalButton() {
 
   const connectWallet = async () => {
     try {
-      // Use the standard EIP-1193 provider from the Farcaster SDK
       const provider = sdk.wallet.ethProvider;
       const accounts = await provider.request({ method: "eth_requestAccounts" }) as `0x${string}`[];
       
@@ -34,14 +39,7 @@ export default function SignalButton() {
 
     setLoading(true);
     try {
-      // Create viem client using the SDK's provider
-      const client = createWalletClient({
-        account,
-        chain: base,
-        transport: custom(sdk.wallet.ethProvider)
-      });
-
-      // Pick 5 random contracts
+      // 2. Pick 5 random contracts
       const selected: string[] = [];
       const copyContracts = [...CONTRACTS];
       for (let i = 0; i < 5; i++) {
@@ -51,19 +49,37 @@ export default function SignalButton() {
         copyContracts.splice(idx, 1);
       }
 
-      // Send transaction via the Farcaster native wallet
-      const hash = await client.writeContract({
+      console.log("Simulating with contracts:", selected);
+
+      // 3. SIMULATE CONTRACT (This catches the error before the wallet pops up)
+      // If this fails, it will jump straight to the catch block with the exact reason.
+      const { request } = await publicClient.simulateContract({
         address: EXECUTOR_ADDRESS,
         abi: EXECUTOR_ABI,
         functionName: "executeAll",
-        args: [selected]
+        args: [selected],
+        account,
       });
+
+      // 4. Send transaction via the Farcaster native wallet provider
+      const walletClient = createWalletClient({
+        account,
+        chain: base,
+        transport: custom(sdk.wallet.ethProvider)
+      });
+
+      const hash = await walletClient.writeContract(request);
 
       console.log("Tx hash:", hash);
       alert(`✅ Signal sent! Tx hash: ${hash}`);
     } catch (err: any) {
-      console.error(err);
-      alert(`❌ Transaction failed: ${err.message}`);
+      console.error("Detailed Error:", err);
+
+      // Extract revert reason or short message for better UX
+      const errorMsg = err.shortMessage || err.reason || err.message || "Unknown error";
+      
+      // If you get "Insufficient funds", the wallet needs more ETH on Base
+      alert(`❌ Simulation failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -74,19 +90,22 @@ export default function SignalButton() {
       {!account ? (
         <button
           onClick={connectWallet}
+          className="connect-btn"
           style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
         >
           Connect Farcaster Wallet
         </button>
       ) : (
         <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "0.8rem", color: "gray" }}>Connected: {account.slice(0, 6)}...{account.slice(-4)}</p>
+          <p style={{ fontSize: "0.8rem", color: "gray" }}>
+            Connected: {account.slice(0, 6)}...{account.slice(-4)}
+          </p>
           <button
             onClick={handleClick}
             disabled={loading}
             style={{ padding: "1rem 2rem", fontSize: "1rem", cursor: "pointer" }}
           >
-            {loading ? "Sending..." : "⚡ Signal"}
+            {loading ? "Simulating..." : "⚡ Signal"}
           </button>
         </div>
       )}
