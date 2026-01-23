@@ -7,11 +7,11 @@
   "frame": {
     "version": "1",
     "name": "BasePulse",
-    "iconUrl": "https://basepulse-six.vercel.app",
-    "homeUrl": "https://basepulse-six.vercel.app",
-    "imageUrl": "https://basepulse-six.vercel.app",
+    "iconUrl": "https://basepulse-six.vercel.app/iconurl.png",
+    "homeUrl": "https://basepulse-six.vercel.app/homeurl.png",
+    "imageUrl": "https://basepulse-six.vercel.app/imageurl.png",
     "buttonTitle": "Launch BasePulse",
-    "splashImageUrl": "https://basepulse-six.vercel.app",
+    "splashImageUrl": "https://basepulse-six.vercel.app/splashimageurl.png",
     "splashBackgroundColor": "#0070f3"
   }
 }
