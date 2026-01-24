@@ -21,20 +21,6 @@ Each interaction triggers batched smart contract calls, creating measurable onch
 
 This design intentionally mirrors **organic user behavior** rather than spam transactions.
 
----
-
-## 🔗 Why This Matters (Talent Protocol & Base)
-
-BasePulse is designed to surface **real builder activity signals**, including:
-
-- Smart contract deployments
-- Repeated contract interactions
-- Batched execution patterns
-- User-driven transaction flow
-- Event emissions across multiple contracts
-- Integration with Farcaster distribution
-
-These are the exact behaviors Talent Protocol and Base Builder programs track.
 
 ---
 
@@ -139,8 +125,6 @@ This repository and app generate the following measurable signals:
 This repository serves as:
 - A production Farcaster Miniapp
 - A Base ecosystem contribution
-- A transparent, auditable proof of builder activity
-- A signal source for Talent Protocol and Base
 
 ---
 
