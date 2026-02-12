@@ -24,6 +24,8 @@
     "ogTitle": "BasePulse on Base",
     "ogDescription": "Send, track, and analyze onchain signals on Base directly from Farcaster.",
 
+    "noindex": false,
+
     "iconUrl": "https://basepulse-six.vercel.app/iconurl.png",
     "homeUrl": "https://basepulse-six.vercel.app/",
     "imageUrl": "https://basepulse-six.vercel.app/imageurl.png",
