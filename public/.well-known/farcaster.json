@@ -10,6 +10,7 @@
 
     "description": "An onchain signal dApp on Base that lets users send and track signals directly from Farcaster.",
     "tagline": "Onchain signals on Base",
+    "subtitle": "Signals powered by Base",
 
     "primaryCategory": "finance",
     "tags": [
