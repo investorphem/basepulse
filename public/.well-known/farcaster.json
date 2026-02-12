@@ -7,6 +7,16 @@
   "frame": {
     "version": "1",
     "name": "BasePulse",
+
+    "primaryCategory": "Finance",
+    "tags": [
+      "base",
+      "defi",
+      "onchain",
+      "analytics",
+      "signals"
+    ],
+
     "iconUrl": "https://basepulse-six.vercel.app/iconurl.png",
     "homeUrl": "https://basepulse-six.vercel.app/",
     "imageUrl": "https://basepulse-six.vercel.app/imageurl.png",
