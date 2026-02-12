@@ -9,7 +9,7 @@
     "name": "BasePulse",
 
     "description": "An onchain signal dApp on Base that lets users send and track signals directly from Farcaster.",
-    "tagline": "Onchain signals, powered by Base.",
+    "tagline": "Onchain signals on Base",
 
     "primaryCategory": "finance",
     "tags": [
@@ -20,7 +20,7 @@
       "signals"
     ],
 
-    "ogTitle": "BasePulse — Onchain Signals on Base",
+    "ogTitle": "BasePulse on Base",
     "ogDescription": "Send, track, and analyze onchain signals on Base directly from Farcaster.",
 
     "iconUrl": "https://basepulse-six.vercel.app/iconurl.png",
