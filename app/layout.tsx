@@ -9,9 +9,13 @@ export const metadata: Metadata = {
 
   keywords: ['Farcaster', 'Base', 'NFT', 'USDC', 'Signals'],
 
-  // ✅ Base App Registry (Talent Protocol / Base tracking)
+  // ✅ Base App Registry + Talent Protocol verification
   other: {
     'base:app_id': '697466dc3a92926b661fd2ec',
+
+    // ✅ Talent Protocol domain verification
+    'talentapp:project_verification':
+      '4280000b07ae49a6bd8ff01a8570cc0b2b141ee4e4c0d795696726586c8463b54aaefa689bb9f5ca3fec276c16cc4e687ab537a614b41aad6548045f29cd0b4b',
 
     // ✅ Farcaster Miniapp / Frame metadata
     'fc:frame': JSON.stringify({
