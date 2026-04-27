@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
   // ✅ Base App Registry + Talent Protocol verification
   other: {
-    'base:app_id': '69ef569be6b83cf73ad1dbc8',
+    'base:app_id': '697466dc3a92926b661fd2ec',
 
     // ✅ Talent Protocol domain verification
     'talentapp:project_verification':
